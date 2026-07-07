@@ -4,375 +4,292 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#4f46e5" />
-  <title>Trip Spend Splitter</title>
+  <title>Trip Split</title>
   <style>
     :root {
       --ink: #182230;
       --muted: #667085;
       --surface: #ffffff;
-      --canvas: #f5f7ff;
-      --line: #e5e7ef;
+      --canvas: #f6f7ff;
+      --line: #e6e8f0;
       --primary: #4f46e5;
-      --primary-2: #7c3aed;
-      --primary-soft: #eef2ff;
+      --primary-dark: #3730a3;
+      --soft: #eef2ff;
       --green: #078a50;
       --green-soft: #ecfdf3;
       --red: #c43232;
-      --red-soft: #fff2f1;
-      --amber: #b45309;
-      --shadow: 0 18px 45px rgba(41, 45, 96, 0.10);
-      --shadow-soft: 0 8px 24px rgba(30, 41, 59, 0.08);
+      --red-soft: #fff1f1;
+      --amber: #a95f00;
+      --amber-soft: #fff7e9;
+      --shadow: 0 16px 48px rgba(27, 36, 87, .10);
     }
 
     * { box-sizing: border-box; }
     html { scroll-behavior: smooth; }
     body {
       margin: 0;
-      min-width: 320px;
-      color: var(--ink);
       font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--ink);
       background:
-        radial-gradient(circle at 5% 2%, rgba(124, 58, 237, .13), transparent 25rem),
-        radial-gradient(circle at 95% 7%, rgba(79, 70, 229, .15), transparent 28rem),
+        radial-gradient(circle at 8% 2%, rgba(124, 58, 237, .11), transparent 26rem),
+        radial-gradient(circle at 92% 1%, rgba(79, 70, 229, .12), transparent 23rem),
         var(--canvas);
+      min-height: 100vh;
     }
 
     button, input, select { font: inherit; }
     button { cursor: pointer; }
-
-    .page-shell { max-width: 1120px; margin: 0 auto; padding: 28px 18px 64px; }
+    .shell { max-width: 1100px; margin: 0 auto; padding: 34px 18px 52px; }
 
     .hero {
-      position: relative;
-      overflow: hidden;
-      color: #fff;
-      padding: 32px;
-      border-radius: 26px;
-      background: linear-gradient(125deg, #312e81 0%, #4f46e5 48%, #7c3aed 100%);
-      box-shadow: 0 24px 50px rgba(79, 70, 229, 0.25);
+      display: flex; justify-content: space-between; gap: 22px; align-items: flex-start;
+      margin-bottom: 22px;
     }
-    .hero::after {
-      content: "";
-      position: absolute;
-      right: -54px;
-      top: -100px;
-      width: 310px;
-      height: 310px;
-      border-radius: 50%;
-      border: 50px solid rgba(255,255,255,.10);
-      transform: rotate(25deg);
-    }
-    .hero::before {
-      content: "";
-      position: absolute;
-      left: 42%;
-      bottom: -120px;
-      width: 250px;
-      height: 250px;
-      border-radius: 50%;
-      background: rgba(255,255,255,.07);
-    }
-    .hero-content { position: relative; z-index: 1; display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; }
-    .eyebrow { margin: 0 0 10px; font-size: 12px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: rgba(255,255,255,.74); }
-    h1 { margin: 0; font-size: clamp(29px, 4vw, 42px); letter-spacing: -.035em; line-height: 1.06; }
-    .hero-subtitle { max-width: 650px; margin: 12px 0 0; font-size: 16px; line-height: 1.55; color: rgba(255,255,255,.86); }
-    .save-pill {
-      flex: 0 0 auto;
-      display: inline-flex;
-      gap: 8px;
-      align-items: center;
-      min-height: 38px;
-      max-width: 250px;
-      padding: 9px 12px;
-      border: 1px solid rgba(255,255,255,.24);
+    .eyebrow {
+      display: inline-flex; align-items: center; gap: 7px;
+      color: #4338ca; background: var(--soft); padding: 6px 10px;
+      font-size: 12px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase;
       border-radius: 999px;
-      background: rgba(255,255,255,.13);
-      color: rgba(255,255,255,.96);
-      font-size: 12px;
-      line-height: 1.25;
-      backdrop-filter: blur(8px);
     }
-    .save-dot { width: 8px; height: 8px; border-radius: 50%; background: #8cf2bd; box-shadow: 0 0 0 4px rgba(140, 242, 189, .18); }
+    .eyebrow::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: #6d5dfc; }
+    h1 { margin: 11px 0 8px; font-size: clamp(30px, 5vw, 45px); line-height: 1; letter-spacing: -.045em; }
+    .intro { margin: 0; color: var(--muted); font-size: 16px; max-width: 680px; line-height: 1.55; }
+    .sync-chip {
+      flex: none; min-width: 180px; padding: 11px 13px; border: 1px solid #dbe4ff; background: rgba(255,255,255,.78);
+      border-radius: 13px; box-shadow: 0 6px 18px rgba(49,46,129,.06); font-size: 12px; color: var(--muted);
+    }
+    .sync-chip b { display: block; color: var(--ink); margin-bottom: 4px; font-size: 13px; }
+    .sync-dot { display:inline-block; width:8px; height:8px; background:#b3b8c8; border-radius:50%; margin-right:6px; }
+    .sync-dot.ok { background: #11a567; box-shadow: 0 0 0 4px #dff7e9; }
+    .sync-dot.busy { background: #f59e0b; box-shadow: 0 0 0 4px #fff1cf; }
+    .sync-dot.bad { background: #d94848; box-shadow: 0 0 0 4px #ffe4e4; }
 
-    .steps {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 12px;
-      margin: 18px 0;
+    .notice {
+      display:none; margin-bottom:18px; padding:13px 15px; border-radius:12px; line-height:1.45; font-size:14px;
+      border:1px solid #ffe1a9; background:var(--amber-soft); color:#744000;
     }
-    .step {
-      display: flex;
-      gap: 10px;
-      align-items: center;
-      min-width: 0;
-      padding: 13px 14px;
-      border: 1px solid rgba(79,70,229,.11);
-      border-radius: 15px;
-      background: rgba(255,255,255,.82);
-      box-shadow: var(--shadow-soft);
-    }
-    .step-no {
-      flex: 0 0 auto;
-      display: grid;
-      place-items: center;
-      width: 27px;
-      height: 27px;
-      border-radius: 9px;
-      background: var(--primary-soft);
-      color: var(--primary);
-      font-size: 13px;
-      font-weight: 850;
-    }
-    .step strong { display: block; font-size: 13px; }
-    .step span { display: block; margin-top: 2px; overflow: hidden; color: var(--muted); font-size: 12px; white-space: nowrap; text-overflow: ellipsis; }
+    .notice.show { display:block; }
+    .notice code { background: rgba(255,255,255,.62); padding: 2px 5px; border-radius: 5px; }
 
+    .grid { display:grid; grid-template-columns: .84fr 1.16fr; gap:18px; align-items:start; }
     .card {
-      margin-top: 18px;
-      padding: 24px;
-      border: 1px solid rgba(103, 113, 165, .15);
-      border-radius: 20px;
-      background: rgba(255,255,255,.93);
-      box-shadow: var(--shadow);
-      backdrop-filter: blur(8px);
+      background:rgba(255,255,255,.92); backdrop-filter: blur(8px); border:1px solid rgba(226,229,240,.95);
+      box-shadow: var(--shadow); border-radius:18px; padding:22px; margin-bottom:18px;
     }
-    .section-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 20px; }
-    .section-heading h2 { margin: 0; font-size: 20px; letter-spacing: -.02em; }
-    .section-heading p { margin: 5px 0 0; color: var(--muted); font-size: 13px; line-height: 1.5; }
-    .section-chip { display: inline-flex; align-items: center; gap: 7px; flex: 0 0 auto; padding: 7px 10px; border-radius: 999px; color: #4338ca; background: var(--primary-soft); font-size: 12px; font-weight: 800; }
+    .card-title { display:flex; gap:11px; align-items:center; margin-bottom:5px; }
+    .step { width:29px; height:29px; border-radius:9px; display:grid; place-items:center; background:var(--soft); color:#4338ca; font-size:13px; font-weight:800; }
+    h2 { margin:0; font-size:18px; letter-spacing:-.02em; }
+    .card-copy { margin: 0 0 17px 40px; color:var(--muted); font-size:13px; line-height:1.45; }
 
-    label { display: block; margin-bottom: 7px; color: #344054; font-size: 12px; font-weight: 800; letter-spacing: .01em; }
+    label { display:block; margin:0 0 6px; color:#445066; font-size:12px; font-weight:800; }
     input, select {
-      width: 100%;
-      min-height: 44px;
-      padding: 10px 12px;
-      border: 1px solid #d7dbe8;
-      border-radius: 11px;
-      outline: none;
-      color: var(--ink);
-      background: #fff;
-      transition: border-color .15s, box-shadow .15s, transform .15s;
+      width:100%; border:1px solid #d8ddea; background:#fff; color:var(--ink); border-radius:10px; padding:11px 12px; outline: none;
+      transition: border-color .16s, box-shadow .16s;
     }
-    input::placeholder { color: #9aa2b1; }
-    input:focus, select:focus { border-color: var(--primary); box-shadow: 0 0 0 4px rgba(79,70,229,.12); }
+    input:focus, select:focus { border-color:#7c70f8; box-shadow:0 0 0 4px rgba(99,102,241,.13); }
+    input:disabled, select:disabled { background:#f5f6fa; color:#9aa3b6; cursor:not-allowed; }
+    .fields { display:grid; gap:12px; }
+    .two { grid-template-columns:1fr 1fr; }
+    .three { grid-template-columns:1fr 1fr 1fr; }
 
-    .group-form { display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: end; }
-    .input-hint { margin: 8px 0 0; color: var(--muted); font-size: 12px; line-height: 1.45; }
-
-    .button {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      min-height: 44px;
-      padding: 10px 15px;
-      border: 1px solid transparent;
-      border-radius: 11px;
-      color: #fff;
-      background: var(--primary);
-      font-weight: 800;
-      white-space: nowrap;
-      transition: transform .15s, box-shadow .15s, background .15s;
+    .button-row { display:flex; gap:10px; flex-wrap:wrap; margin-top:15px; }
+    .btn {
+      appearance:none; border:0; border-radius:10px; padding:11px 14px; font-size:13px; font-weight:800;
+      background:var(--primary); color:#fff; box-shadow:0 7px 14px rgba(79,70,229,.22); transition:transform .15s, background .15s;
     }
-    .button:hover { transform: translateY(-1px); background: #4338ca; box-shadow: 0 10px 18px rgba(79,70,229,.22); }
-    .button:active { transform: translateY(0); }
-    .button.secondary { color: #3730a3; border-color: #dfe3ff; background: #f6f7ff; }
-    .button.secondary:hover { background: #eef0ff; box-shadow: none; }
-    .button.danger { color: var(--red); border-color: #ffd5d3; background: var(--red-soft); }
-    .button.danger:hover { background: #ffe5e3; box-shadow: none; }
-    .button.small { min-height: 36px; padding: 7px 10px; font-size: 12px; }
+    .btn:hover { background:var(--primary-dark); transform:translateY(-1px); }
+    .btn:disabled { background:#a5a7b6; cursor:not-allowed; box-shadow:none; transform:none; }
+    .btn-secondary { background:#f0f2fb; color:#3f4a61; box-shadow:none; border:1px solid #e1e5f0; }
+    .btn-secondary:hover { background:#e8ebf7; }
+    .btn-danger { background:var(--red-soft); color:var(--red); box-shadow:none; border:1px solid #ffd6d6; }
+    .btn-danger:hover { background:#ffe4e4; }
+    .btn-small { padding:7px 9px; border-radius:8px; font-size:12px; }
 
-    .message { display: none; margin-top: 14px; padding: 11px 13px; border-radius: 11px; font-size: 13px; line-height: 1.4; }
-    .message.error { display: block; color: #9f1d1d; background: #fff3f2; border: 1px solid #ffd6d3; }
-    .message.success { display: block; color: #087443; background: var(--green-soft); border: 1px solid #c7f1da; }
+    .helper { color:var(--muted); font-size:12px; line-height:1.45; margin:10px 0 0; }
+    .message { display:none; margin-top:13px; padding:10px 11px; border-radius:10px; font-size:13px; line-height:1.4; }
+    .message.show { display:block; }
+    .message.success { background:var(--green-soft); color:#076c42; }
+    .message.error { background:var(--red-soft); color:#a12c2c; }
+    .message.info { background:var(--soft); color:#3f37a8; }
 
-    .expense-list { display: grid; gap: 14px; }
-    .expense {
-      position: relative;
-      overflow: hidden;
-      padding: 17px;
-      border: 1px solid #e4e7f1;
-      border-radius: 16px;
-      background: linear-gradient(135deg, #ffffff 0%, #fcfcff 100%);
-      box-shadow: 0 4px 12px rgba(28,39,89,.035);
+    .group-list { display:flex; gap:7px; flex-wrap:wrap; margin-top:12px; }
+    .person-pill { padding:6px 9px; border-radius:999px; background:#f7f8fc; border:1px solid #e3e6f0; color:#465068; font-size:12px; font-weight:700; }
+    .split-list { display:flex; gap:7px; flex-wrap:wrap; }
+    .check-pill {
+      display:inline-flex; align-items:center; gap:6px; background:#fff; border:1px solid #dfe3ee; border-radius:999px; padding:7px 10px;
+      color:#4d5870; font-size:12px; font-weight:700; cursor:pointer; user-select:none;
     }
-    .expense::before { content: ""; position: absolute; inset: 0 auto 0 0; width: 4px; background: linear-gradient(#6d64eb, #9d55e8); }
-    .expense-grid { display: grid; grid-template-columns: minmax(180px, 1.45fr) 135px minmax(150px, 1fr) auto; gap: 12px; align-items: end; }
-    .split-label { margin: 16px 0 8px; }
-    .split-people { display: flex; flex-wrap: wrap; gap: 8px; }
-    .person-check { display: inline-flex; align-items: center; gap: 7px; padding: 7px 10px; border: 1px solid #e0e3ee; border-radius: 999px; background: #fff; color: #475467; font-size: 12px; font-weight: 700; cursor: pointer; transition: .15s; }
-    .person-check:hover { border-color: #c9c7ff; background: #f8f8ff; }
-    .person-check input { width: 15px; min-height: 0; height: 15px; margin: 0; accent-color: var(--primary); box-shadow: none; }
+    .check-pill:has(input:checked) { background:var(--soft); border-color:#beb8ff; color:#4038a6; }
+    .check-pill input { width:auto; accent-color:var(--primary); margin:0; }
 
-    .actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 18px; }
-    .actions-spacer { flex: 1; }
-    .save-note { margin: 13px 0 0; color: var(--muted); font-size: 12px; line-height: 1.45; }
-    .save-note b { color: #475467; }
+    .empty { padding:28px 14px; text-align:center; color:var(--muted); border:1px dashed #d7dbea; border-radius:13px; background:#fafbff; font-size:13px; line-height:1.55; }
+    .expenses { display:grid; gap:10px; }
+    .expense-row { display:grid; grid-template-columns: 1.08fr .66fr .82fr auto; gap:12px; align-items:center; padding:13px; border:1px solid #e6e8f0; border-radius:13px; background:#fff; }
+    .expense-name { font-weight:800; font-size:14px; overflow-wrap:anywhere; }
+    .expense-meta { margin-top:3px; color:var(--muted); font-size:12px; }
+    .expense-amount { text-align:right; font-size:15px; font-weight:900; color:#3932aa; }
+    .expense-share { color:var(--muted); font-size:12px; text-align:right; line-height:1.35; }
 
-    .results { display: none; }
-    .summary { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 12px; margin-bottom: 24px; }
-    .metric { min-height: 104px; padding: 17px; border: 1px solid #e4e7f1; border-radius: 16px; background: linear-gradient(140deg, #fff, #fafaff); }
-    .metric.featured { color: #fff; border: none; background: linear-gradient(135deg, #4338ca, #7c3aed); box-shadow: 0 13px 25px rgba(79,70,229,.22); }
-    .metric span { display: block; color: var(--muted); font-size: 12px; font-weight: 700; }
-    .metric.featured span { color: rgba(255,255,255,.72); }
-    .metric strong { display: block; margin-top: 7px; font-size: 26px; letter-spacing: -.035em; }
+    .summary { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:18px; }
+    .metric { background:linear-gradient(145deg,#fbfbff,#f6f7ff); border:1px solid #e6e8f6; border-radius:13px; padding:13px; }
+    .metric span { display:block; color:var(--muted); font-size:11px; font-weight:700; }
+    .metric strong { display:block; margin-top:6px; color:#26205e; font-size:20px; letter-spacing:-.03em; }
+    .section-label { font-size:12px; font-weight:900; letter-spacing:.055em; text-transform:uppercase; color:#6c7790; margin:18px 0 9px; }
+    table { width:100%; border-collapse:collapse; }
+    th,td { border-bottom:1px solid #eef0f5; padding:10px 7px; font-size:13px; text-align:left; }
+    th { color:#727d94; font-size:10px; letter-spacing:.055em; text-transform:uppercase; }
+    td:not(:first-child), th:not(:first-child) { text-align:right; }
+    .positive { color:var(--green); font-weight:900; } .negative { color:var(--red); font-weight:900; } .zero { color:var(--muted); font-weight:900; }
+    .settlements { display:grid; gap:9px; }
+    .settlement { display:flex; justify-content:space-between; gap:12px; align-items:center; background:#f6f8ff; border:1px solid #e0e5ff; border-radius:11px; padding:11px 12px; color:#44516d; font-size:13px; }
+    .settlement b { color:#3730a3; }
 
-    .results-grid { display: grid; grid-template-columns: 1.05fr .95fr; gap: 18px; align-items: start; }
-    .sub-card { overflow: hidden; border: 1px solid #e4e7f1; border-radius: 16px; background: #fff; }
-    .sub-card-title { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 15px 16px; border-bottom: 1px solid #ebedf4; background: #fafbff; }
-    .sub-card-title h3 { margin: 0; font-size: 14px; letter-spacing: -.01em; }
-    .sub-card-title span { color: var(--muted); font-size: 12px; }
-    .table-wrap { overflow-x: auto; }
-    table { width: 100%; border-collapse: collapse; font-size: 13px; }
-    th, td { padding: 12px 14px; text-align: left; border-bottom: 1px solid #eff1f6; }
-    tr:last-child td { border-bottom: 0; }
-    th { color: #7b8494; background: #fff; font-size: 11px; letter-spacing: .065em; text-transform: uppercase; }
-    td:last-child, th:last-child { text-align: right; }
-    .positive { color: var(--green); font-weight: 850; }
-    .negative { color: var(--red); font-weight: 850; }
-    .zero { color: var(--muted); font-weight: 850; }
+    .hidden { display:none !important; }
+    .footer-note { text-align:center; font-size:12px; color:#8490a6; margin-top:22px; }
 
-    .settlement-list { display: grid; gap: 9px; padding: 12px; }
-    .settlement { display: flex; justify-content: space-between; gap: 12px; align-items: center; padding: 13px; border: 1px solid #dce3ff; border-radius: 13px; background: #f8f9ff; font-size: 13px; line-height: 1.35; }
-    .settlement strong { color: #4338ca; }
-    .settlement .amount { flex: 0 0 auto; padding: 6px 8px; border-radius: 8px; background: #e9ebff; color: #3730a3; font-size: 12px; font-weight: 850; }
-    .settlement.settled { border-color: #ccefdc; background: #f2fff7; color: #087443; }
-
-    .empty-state { padding: 8px 0 2px; color: var(--muted); font-size: 13px; }
-
-    @media (max-width: 820px) {
-      .hero { padding: 26px; }
-      .hero-content { display: block; }
-      .save-pill { margin-top: 18px; max-width: none; }
-      .steps { grid-template-columns: 1fr; }
-      .summary, .results-grid { grid-template-columns: 1fr; }
-      .expense-grid { grid-template-columns: 1fr 1fr; }
-      .expense-grid .remove-wrap { grid-column: 1 / -1; }
-      .remove-expense { width: 100%; }
+    @media (max-width: 800px) {
+      .hero { display:block; }
+      .sync-chip { margin-top:16px; width:max-content; }
+      .grid { grid-template-columns:1fr; }
+      .expense-row { grid-template-columns:1fr auto; }
+      .expense-share { text-align:left; } 
     }
-    @media (max-width: 560px) {
-      .page-shell { padding: 14px 12px 40px; }
-      .hero, .card { border-radius: 18px; }
-      .hero { padding: 23px 20px; }
-      .card { padding: 18px; }
-      .group-form { grid-template-columns: 1fr; }
-      .group-form .button { width: 100%; }
-      .expense-grid { grid-template-columns: 1fr; }
-      .actions .button { flex: 1 1 calc(50% - 10px); }
-      .actions .button:nth-child(2) { flex-basis: 100%; }
-      .actions-spacer { display: none; }
-      .section-heading { display: block; }
-      .section-chip { margin-top: 11px; }
-      th, td { padding: 11px 10px; }
+    @media (max-width:560px) {
+      .shell { padding:22px 13px 38px; }
+      .card { padding:17px; border-radius:15px; }
+      .two, .three, .summary { grid-template-columns:1fr; }
+      .expense-row { grid-template-columns:1fr; gap:5px; }
+      .expense-amount, .expense-share { text-align:left; }
+      .expense-row .btn { width:100%; }
+      .card-copy { margin-left:0; }
     }
   </style>
 </head>
 <body>
-  <main class="page-shell">
+  <main class="shell">
     <header class="hero">
-      <div class="hero-content">
-        <div>
-          <p class="eyebrow">Trip money, made simple</p>
-          <h1>Trip Spend Splitter</h1>
-          <p class="hero-subtitle">Capture every expense during the trip. At the end, get one clean list showing exactly who pays whom.</p>
-        </div>
-        <div class="save-pill" id="saveStatus"><span class="save-dot"></span><span>Ready to save your trip</span></div>
+      <div>
+        <span class="eyebrow">Shared trip ledger</span>
+        <h1>Trip Split</h1>
+        <p class="intro">One live view of every expense. Everyone can add what they paid, and the final settlement updates for the whole group.</p>
+      </div>
+      <div class="sync-chip" aria-live="polite">
+        <b><span id="syncDot" class="sync-dot"></span><span id="syncTitle">Not connected</span></b>
+        <span id="syncDetail">Set the Google Apps Script URL first.</span>
       </div>
     </header>
 
-    <section class="steps" aria-label="How it works">
-      <div class="step"><div class="step-no">1</div><div><strong>Add the group</strong><span>Enter everyone travelling</span></div></div>
-      <div class="step"><div class="step-no">2</div><div><strong>Log expenses</strong><span>Saved automatically on this browser</span></div></div>
-      <div class="step"><div class="step-no">3</div><div><strong>Settle up</strong><span>See the smallest payment list</span></div></div>
-    </section>
+    <div class="notice" id="configNotice"></div>
 
-    <section class="card">
-      <div class="section-heading">
-        <div>
-          <h2>Start your trip group</h2>
-          <p>Set the names once. You can then add expenses as you go.</p>
-        </div>
-        <span class="section-chip">👥 2 or more people</span>
-      </div>
-      <div class="group-form">
-        <div>
-          <label for="peopleInput">Names, separated by commas</label>
-          <input id="peopleInput" autocomplete="off" placeholder="Example: Nagesh, Anisha, Rahul, Junaid, Shazia" />
-          <p class="input-hint">Changing the group starts a fresh trip and replaces the saved expenses.</p>
-        </div>
-        <button id="setPeopleBtn" class="button" type="button">Start trip <span aria-hidden="true">→</span></button>
-      </div>
-      <div id="groupMessage" class="message" role="alert"></div>
-    </section>
+    <div class="grid">
+      <section>
+        <section class="card" id="groupCard">
+          <div class="card-title"><span class="step">1</span><h2>Set the group</h2></div>
+          <p class="card-copy">Do this once. After the first expense, the group is locked to keep the settlement accurate.</p>
+          <div id="groupSetup">
+            <label for="peopleInput">Names, separated by commas</label>
+            <input id="peopleInput" placeholder="Example: Nagesh, Rahul, Anisha, Junaid, Shazia" autocomplete="off" />
+            <div class="button-row"><button class="btn" id="savePeopleBtn">Save shared group</button></div>
+            <p class="helper">Every person will see this same group after they open the page.</p>
+          </div>
+          <div id="groupReady" class="hidden">
+            <div class="group-list" id="groupList"></div>
+            <p class="helper">Group saved to the shared Google Sheet.</p>
+          </div>
+          <div class="message" id="groupMessage"></div>
+        </section>
 
-    <section class="card" id="expensesCard" style="display:none;">
-      <div class="section-heading">
-        <div>
-          <h2>Add expenses</h2>
-          <p>For each expense, select who paid and who should share it.</p>
-        </div>
-        <span class="section-chip">₹ Indian Rupee</span>
-      </div>
+        <section class="card" id="entryCard">
+          <div class="card-title"><span class="step">2</span><h2>Add an expense</h2></div>
+          <p class="card-copy">Saving here sends the expense to the shared Google Sheet for everyone.</p>
+          <form id="expenseForm">
+            <div class="fields three">
+              <div><label for="expenseDate">Date</label><input id="expenseDate" type="date" required /></div>
+              <div><label for="expenseAmount">Amount (₹)</label><input id="expenseAmount" type="number" min="0.01" step="0.01" placeholder="0.00" required /></div>
+              <div><label for="expensePayer">Paid by</label><select id="expensePayer" required></select></div>
+            </div>
+            <div class="fields" style="margin-top:12px;">
+              <div><label for="expenseDescription">What was it?</label><input id="expenseDescription" maxlength="250" placeholder="Dinner, hotel, taxi, tickets..." required /></div>
+              <div><label for="addedBy">Added by (optional)</label><input id="addedBy" maxlength="120" placeholder="Your name" /></div>
+              <div>
+                <label>Split between</label>
+                <div id="splitPeople" class="split-list"></div>
+              </div>
+            </div>
+            <div class="button-row">
+              <button class="btn" id="saveExpenseBtn" type="submit">Save shared expense</button>
+              <button class="btn btn-secondary" id="refreshBtn" type="button">Refresh all expenses</button>
+            </div>
+            <div class="message" id="expenseMessage"></div>
+          </form>
+        </section>
+      </section>
 
-      <div id="expenses" class="expense-list"></div>
+      <section>
+        <section class="card">
+          <div class="card-title"><span class="step">3</span><h2>Live trip summary</h2></div>
+          <p class="card-copy">Totals and settlements are calculated from the shared sheet, not from one person’s device.</p>
+          <div class="summary">
+            <div class="metric"><span>Total spend</span><strong id="totalSpend">₹0.00</strong></div>
+            <div class="metric"><span>Expenses</span><strong id="expenseCount">0</strong></div>
+            <div class="metric"><span>People</span><strong id="peopleCount">0</strong></div>
+          </div>
 
-      <div class="actions">
-        <button class="button secondary" id="addExpenseBtn" type="button">＋ Add another expense</button>
-        <span class="actions-spacer"></span>
-        <button class="button secondary" id="exportBtn" type="button">⇩ Export backup</button>
-        <button class="button danger" id="resetBtn" type="button">Reset trip</button>
-        <button class="button" id="calculateBtn" type="button">Calculate settlement</button>
-      </div>
-      <p class="save-note"><b>Auto-save is on.</b> Your data remains on this browser. Export a backup before clearing browser data or switching devices.</p>
-      <div id="expenseMessage" class="message" role="alert"></div>
-    </section>
+          <div class="section-label">Who should pay whom</div>
+          <div id="settlements" class="settlements"><div class="empty">Set the group and add expenses to calculate settlements.</div></div>
 
-    <section class="card results" id="results">
-      <div class="section-heading">
-        <div>
-          <h2>Settlement result</h2>
-          <p>Use this list to settle the entire trip with the fewest necessary payments.</p>
-        </div>
-        <span class="section-chip">✓ Ready to share</span>
-      </div>
-
-      <div class="summary">
-        <div class="metric featured"><span>Total trip spend</span><strong id="totalSpend">₹0.00</strong></div>
-        <div class="metric"><span>People in the group</span><strong id="peopleCount">0</strong></div>
-        <div class="metric"><span>Expenses recorded</span><strong id="expenseCount">0</strong></div>
-      </div>
-
-      <div class="results-grid">
-        <div class="sub-card">
-          <div class="sub-card-title"><h3>Individual balance</h3><span>+ receives · − pays</span></div>
-          <div class="table-wrap">
+          <div class="section-label">Individual balance</div>
+          <div style="overflow:auto;">
             <table>
-              <thead><tr><th>Person</th><th>Paid</th><th>Share owed</th><th>Net</th></tr></thead>
-              <tbody id="balanceRows"></tbody>
+              <thead><tr><th>Person</th><th>Paid</th><th>Share</th><th>Net</th></tr></thead>
+              <tbody id="balanceRows"><tr><td colspan="4" class="empty">No data yet.</td></tr></tbody>
             </table>
           </div>
-        </div>
+        </section>
 
-        <div class="sub-card">
-          <div class="sub-card-title"><h3>Who should pay whom</h3><span>Minimum transfers</span></div>
-          <div id="settlements" class="settlement-list"></div>
-        </div>
-      </div>
-    </section>
+        <section class="card">
+          <div class="card-title"><span class="step">4</span><h2>All shared expenses</h2></div>
+          <p class="card-copy">Anyone with this page sees the same entries. Deleting an entry removes it for the group.</p>
+          <div id="expenseList" class="expenses"><div class="empty">No shared expenses yet.</div></div>
+        </section>
+      </section>
+    </div>
+
+    <p class="footer-note">For a short trip: keep the Google Sheet and Apps Script link private to the group.</p>
   </main>
 
   <script>
-    const STORAGE_KEY = 'trip-spend-splitter-v2';
-    let people = [];
+    /*
+     * UPDATE ONLY THESE TWO VALUES BEFORE UPLOADING THIS FILE TO GITHUB PAGES.
+     * The API URL must be the deployed Apps Script URL ending in /exec.
+     * The trip key must exactly match TRIP_KEY in Code.gs.
+     */
+    const CONFIG = {
+      apiUrl: 'https://script.google.com/macros/s/AKfycbyZKj6ko7G0a8evgKtZaXBerqtY7xxd-v9VViTX3vfHI5p2LEPRamHoIWOIrZajBFUE/exec',
+      tripKey: '5769b013-1e61-416d-8d72-6d121d1ec442',
+      currency: 'INR'
+    };
 
-    const currency = new Intl.NumberFormat('en-IN', {
-      style: 'currency', currency: 'INR', minimumFractionDigits: 2
-    });
+    const state = { people: [], expenses: [] };
+    const currency = new Intl.NumberFormat('en-IN', { style: 'currency', currency: CONFIG.currency, minimumFractionDigits: 2 });
     const $ = (id) => document.getElementById(id);
 
-    function showMessage(id, text, type = 'error') {
+    function configured() {
+      return CONFIG.apiUrl && CONFIG.tripKey &&
+        !CONFIG.apiUrl.includes('PASTE_YOUR') && !CONFIG.tripKey.includes('PASTE_THE');
+    }
+
+    function setSync(status, detail) {
+      const dot = $('syncDot');
+      dot.className = `sync-dot ${status}`;
+      $('syncTitle').textContent = status === 'ok' ? 'Shared sheet synced' : status === 'busy' ? 'Syncing shared sheet' : status === 'bad' ? 'Connection issue' : 'Not connected';
+      $('syncDetail').textContent = detail;
+    }
+
+    function showMessage(id, text, type = 'info') {
       const el = $(id);
       el.textContent = text;
-      el.className = `message ${type}`;
+      el.className = `message show ${type}`;
     }
 
     function clearMessage(id) {
@@ -382,228 +299,279 @@
     }
 
     function escapeHtml(value) {
-      return String(value).replace(/[&<>'"]/g, c => ({
-        '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
-      }[c]));
+      return String(value ?? '').replace(/[&<>'"]/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#39;', '"':'&quot;' }[c]));
     }
 
-    function currentExpenseData() {
-      return [...document.querySelectorAll('.expense')].map(card => ({
-        description: card.querySelector('.expense-desc').value,
-        amount: card.querySelector('.expense-amount').value,
-        payer: card.querySelector('.expense-payer').value,
-        sharedWith: [...card.querySelectorAll('input[type="checkbox"]:checked')].map(x => x.value)
-      }));
+    function escapeAttribute(value) {
+      return escapeHtml(value).replace(/`/g, '&#96;');
     }
 
-    function updateSaveStatus(text) {
-      $('saveStatus').innerHTML = `<span class="save-dot"></span><span>${escapeHtml(text)}</span>`;
+    function localDateValue() {
+      const now = new Date();
+      const offset = now.getTimezoneOffset();
+      return new Date(now.getTime() - offset * 60000).toISOString().slice(0, 10);
     }
 
-    function saveTrip() {
-      if (!people.length) return;
-      const trip = { people, expenses: currentExpenseData(), savedAt: new Date().toISOString() };
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(trip));
-      const when = new Date(trip.savedAt).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' });
-      updateSaveStatus(`Saved automatically · ${when}`);
-    }
+    function sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
 
-    function setPeople() {
-      const raw = $('peopleInput').value.trim();
-      const names = raw.split(',').map(x => x.trim()).filter(Boolean);
-      const uniqueNames = [...new Set(names.map(x => x.toLowerCase()))];
-
-      if (names.length < 2) {
-        showMessage('groupMessage', 'Add at least two names to start a trip.');
-        return;
-      }
-      if (uniqueNames.length !== names.length) {
-        showMessage('groupMessage', 'Each person needs a unique name.');
-        return;
-      }
-
-      people = names;
-      $('expenses').innerHTML = '';
-      $('expensesCard').style.display = 'block';
-      $('results').style.display = 'none';
-      clearMessage('groupMessage');
-      clearMessage('expenseMessage');
-      addExpense();
-      saveTrip();
-      $('expensesCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-
-    function addExpense(data = {}) {
-      if (!people.length) return;
-      const id = `expense-${Date.now()}-${Math.random().toString(16).slice(2)}`;
-      const payer = people.includes(data.payer) ? data.payer : people[0];
-      const sharedWith = Array.isArray(data.sharedWith) && data.sharedWith.length ? data.sharedWith : people;
-      const payerOptions = people.map(name => `<option value="${escapeHtml(name)}" ${name === payer ? 'selected' : ''}>${escapeHtml(name)}</option>`).join('');
-      const checkboxes = people.map(name => `
-        <label class="person-check">
-          <input type="checkbox" value="${escapeHtml(name)}" ${sharedWith.includes(name) ? 'checked' : ''}>
-          ${escapeHtml(name)}
-        </label>`).join('');
-
-      const div = document.createElement('article');
-      div.className = 'expense';
-      div.id = id;
-      div.innerHTML = `
-        <div class="expense-grid">
-          <div>
-            <label>Description</label>
-            <input class="expense-desc" autocomplete="off" placeholder="Hotel, dinner, taxi..." value="${escapeHtml(data.description || '')}" />
-          </div>
-          <div>
-            <label>Amount (₹)</label>
-            <input class="expense-amount" type="number" inputmode="decimal" min="0" step="0.01" placeholder="0.00" value="${escapeHtml(data.amount || '')}" />
-          </div>
-          <div>
-            <label>Paid by</label>
-            <select class="expense-payer">${payerOptions}</select>
-          </div>
-          <div class="remove-wrap">
-            <button class="button danger small remove-expense" type="button">Remove</button>
-          </div>
-        </div>
-        <div>
-          <label class="split-label">Split between</label>
-          <div class="split-people">${checkboxes}</div>
-        </div>`;
-
-      div.querySelector('.remove-expense').addEventListener('click', () => {
-        div.remove();
-        $('results').style.display = 'none';
-        saveTrip();
+    function jsonp(url) {
+      return new Promise((resolve, reject) => {
+        const callback = `tripCallback_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+        const script = document.createElement('script');
+        let done = false;
+        const finish = (fn, value) => {
+          if (done) return;
+          done = true;
+          clearTimeout(timer);
+          delete window[callback];
+          script.remove();
+          fn(value);
+        };
+        const timer = setTimeout(() => finish(reject, new Error('The shared sheet did not respond.')), 15000);
+        window[callback] = (data) => finish(resolve, data);
+        script.onerror = () => finish(reject, new Error('Unable to reach the shared sheet.'));
+        script.src = `${url}${url.includes('?') ? '&' : '?'}callback=${encodeURIComponent(callback)}`;
+        document.head.appendChild(script);
       });
-      div.querySelectorAll('input, select').forEach(field => {
-        field.addEventListener('input', () => { $('results').style.display = 'none'; saveTrip(); });
-        field.addEventListener('change', () => { $('results').style.display = 'none'; saveTrip(); });
-      });
-      $('expenses').appendChild(div);
     }
 
-    function getExpenses() {
-      const cards = [...document.querySelectorAll('.expense')];
-      const parsed = [];
-      for (let index = 0; index < cards.length; index++) {
-        const card = cards[index];
-        const amount = Number(card.querySelector('.expense-amount').value);
-        const payer = card.querySelector('.expense-payer').value;
-        const description = card.querySelector('.expense-desc').value.trim() || `Expense ${index + 1}`;
-        const sharedWith = [...card.querySelectorAll('input[type="checkbox"]:checked')].map(x => x.value);
-        if (!Number.isFinite(amount) || amount <= 0) throw new Error(`Enter a valid amount for ${description}.`);
-        if (!sharedWith.length) throw new Error(`Select at least one person for ${description}.`);
-        parsed.push({ description, amount, payer, sharedWith });
+    async function sendPost(payload) {
+      await fetch(CONFIG.apiUrl, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
+        body: JSON.stringify({ ...payload, key: CONFIG.tripKey })
+      });
+    }
+
+    async function loadTrip(silent = false) {
+      if (!configured()) return;
+      if (!silent) setSync('busy', 'Loading the latest group expenses...');
+      try {
+        const url = `${CONFIG.apiUrl}?action=getTrip&key=${encodeURIComponent(CONFIG.tripKey)}`;
+        const response = await jsonp(url);
+        if (!response || !response.ok) throw new Error(response?.error || 'The shared sheet returned an error.');
+        state.people = Array.isArray(response.trip.people) ? response.trip.people : [];
+        state.expenses = Array.isArray(response.trip.expenses) ? response.trip.expenses : [];
+        render();
+        setSync('ok', `Updated ${new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}`);
+        return true;
+      } catch (error) {
+        setSync('bad', error.message || 'Unable to load shared data.');
+        if (!silent) showMessage('expenseMessage', error.message || 'Unable to load shared data.', 'error');
+        return false;
       }
-      if (!parsed.length) throw new Error('Add at least one expense.');
-      return parsed;
     }
 
-    function calculateSettlement() {
-      clearMessage('expenseMessage');
-      saveTrip();
-      let expenses;
-      try { expenses = getExpenses(); }
-      catch (error) { showMessage('expenseMessage', error.message); return; }
-
-      const paid = Object.fromEntries(people.map(p => [p, 0]));
-      const owed = Object.fromEntries(people.map(p => [p, 0]));
-      let total = 0;
-      expenses.forEach(expense => {
-        total += expense.amount;
-        paid[expense.payer] += expense.amount;
-        const split = expense.amount / expense.sharedWith.length;
-        expense.sharedWith.forEach(person => { owed[person] += split; });
-      });
-      const balances = people.map(person => ({ person, paid: paid[person], owed: owed[person], net: paid[person] - owed[person] }));
-      renderResults(total, expenses.length, balances);
+    function render() {
+      renderGroup();
+      renderExpenseForm();
+      renderSummary();
+      renderExpenseList();
     }
 
-    function renderResults(total, expenseCount, balances) {
-      $('totalSpend').textContent = currency.format(total);
-      $('peopleCount').textContent = people.length;
-      $('expenseCount').textContent = expenseCount;
-      $('balanceRows').innerHTML = balances.map(item => {
-        const className = item.net > 0.005 ? 'positive' : item.net < -0.005 ? 'negative' : 'zero';
-        const sign = item.net > 0.005 ? '+' : '';
-        return `<tr><td>${escapeHtml(item.person)}</td><td>${currency.format(item.paid)}</td><td>${currency.format(item.owed)}</td><td class="${className}">${sign}${currency.format(item.net)}</td></tr>`;
+    function renderGroup() {
+      const ready = state.people.length >= 2;
+      $('groupSetup').classList.toggle('hidden', ready);
+      $('groupReady').classList.toggle('hidden', !ready);
+      if (ready) {
+        $('groupList').innerHTML = state.people.map(person => `<span class="person-pill">${escapeHtml(person)}</span>`).join('');
+      }
+      $('entryCard').classList.toggle('hidden', !ready);
+    }
+
+    function renderExpenseForm() {
+      const existingPayer = $('expensePayer').value;
+      $('expensePayer').innerHTML = state.people.map(person => `<option value="${escapeAttribute(person)}" ${person === existingPayer ? 'selected' : ''}>${escapeHtml(person)}</option>`).join('');
+      const selected = new Set([...document.querySelectorAll('#splitPeople input:checked')].map(input => input.value));
+      const hasExistingSelection = selected.size > 0;
+      $('splitPeople').innerHTML = state.people.map(person => {
+        const checked = hasExistingSelection ? selected.has(person) : true;
+        return `<label class="check-pill"><input type="checkbox" value="${escapeAttribute(person)}" ${checked ? 'checked' : ''}>${escapeHtml(person)}</label>`;
       }).join('');
+      $('saveExpenseBtn').disabled = state.people.length < 2;
+    }
 
-      const settlements = createSettlements(balances);
-      $('settlements').innerHTML = settlements.length
-        ? settlements.map(s => `<div class="settlement"><span><strong>${escapeHtml(s.from)}</strong> pays <strong>${escapeHtml(s.to)}</strong></span><span class="amount">${currency.format(s.amount)}</span></div>`).join('')
-        : '<div class="settlement settled"><span><strong>All settled.</strong> No payments are needed.</span><span>✓</span></div>';
-      $('results').style.display = 'block';
-      $('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    function calculate() {
+      const paid = Object.fromEntries(state.people.map(person => [person, 0]));
+      const owed = Object.fromEntries(state.people.map(person => [person, 0]));
+      let total = 0;
+
+      state.expenses.forEach(expense => {
+        const amount = Number(expense.amount) || 0;
+        if (!paid.hasOwnProperty(expense.payer) || !expense.splitBetween?.length) return;
+        total += amount;
+        paid[expense.payer] += amount;
+        const share = amount / expense.splitBetween.length;
+        expense.splitBetween.forEach(person => { if (owed.hasOwnProperty(person)) owed[person] += share; });
+      });
+
+      const balances = state.people.map(person => ({ person, paid: paid[person], owed: owed[person], net: paid[person] - owed[person] }));
+      return { total, balances, settlements: createSettlements(balances) };
     }
 
     function createSettlements(balances) {
-      const creditors = balances.filter(x => x.net > 0.005).map(x => ({ name: x.person, amount: x.net })).sort((a, b) => b.amount - a.amount);
-      const debtors = balances.filter(x => x.net < -0.005).map(x => ({ name: x.person, amount: -x.net })).sort((a, b) => b.amount - a.amount);
-      const output = [];
+      const creditors = balances.filter(x => x.net > .005).map(x => ({ name:x.person, amount:x.net })).sort((a,b) => b.amount - a.amount);
+      const debtors = balances.filter(x => x.net < -.005).map(x => ({ name:x.person, amount:-x.net })).sort((a,b) => b.amount - a.amount);
+      const settlements = [];
       let i = 0, j = 0;
       while (i < debtors.length && j < creditors.length) {
         const amount = Math.min(debtors[i].amount, creditors[j].amount);
-        if (amount > 0.005) output.push({ from: debtors[i].name, to: creditors[j].name, amount });
+        if (amount > .005) settlements.push({ from: debtors[i].name, to: creditors[j].name, amount });
         debtors[i].amount -= amount;
         creditors[j].amount -= amount;
-        if (debtors[i].amount <= 0.005) i++;
-        if (creditors[j].amount <= 0.005) j++;
+        if (debtors[i].amount <= .005) i++;
+        if (creditors[j].amount <= .005) j++;
       }
-      return output;
+      return settlements;
     }
 
-    function exportBackup() {
-      if (!people.length) return;
-      saveTrip();
-      const backup = localStorage.getItem(STORAGE_KEY);
-      const blob = new Blob([backup], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `trip-spend-backup-${new Date().toISOString().slice(0, 10)}.json`;
-      a.click();
-      URL.revokeObjectURL(url);
-      showMessage('expenseMessage', 'Backup exported successfully.', 'success');
+    function renderSummary() {
+      const { total, balances, settlements } = calculate();
+      $('totalSpend').textContent = currency.format(total);
+      $('expenseCount').textContent = state.expenses.length;
+      $('peopleCount').textContent = state.people.length;
+
+      $('balanceRows').innerHTML = balances.length
+        ? balances.map(item => {
+            const cls = item.net > .005 ? 'positive' : item.net < -.005 ? 'negative' : 'zero';
+            const sign = item.net > .005 ? '+' : '';
+            return `<tr><td><b>${escapeHtml(item.person)}</b></td><td>${currency.format(item.paid)}</td><td>${currency.format(item.owed)}</td><td class="${cls}">${sign}${currency.format(item.net)}</td></tr>`;
+          }).join('')
+        : '<tr><td colspan="4" class="empty">No group set yet.</td></tr>';
+
+      $('settlements').innerHTML = !state.people.length
+        ? '<div class="empty">Set the group and add expenses to calculate settlements.</div>'
+        : !state.expenses.length
+          ? '<div class="empty">No expenses yet. Add the first one to see who owes whom.</div>'
+          : !settlements.length
+            ? '<div class="settlement"><span>Everyone is settled. No payments are needed.</span></div>'
+            : settlements.map(item => `<div class="settlement"><span><b>${escapeHtml(item.from)}</b> pays <b>${escapeHtml(item.to)}</b></span><b>${currency.format(item.amount)}</b></div>`).join('');
     }
 
-    function resetTrip() {
-      if (!confirm('Reset this trip? All saved expenses on this browser will be removed.')) return;
-      people = [];
-      localStorage.removeItem(STORAGE_KEY);
-      $('peopleInput').value = '';
-      $('expenses').innerHTML = '';
-      $('expensesCard').style.display = 'none';
-      $('results').style.display = 'none';
-      updateSaveStatus('Ready to save your trip');
+    function renderExpenseList() {
+      if (!state.expenses.length) {
+        $('expenseList').innerHTML = '<div class="empty">No shared expenses yet.</div>';
+        return;
+      }
+      $('expenseList').innerHTML = state.expenses.slice().reverse().map(expense => {
+        const split = expense.splitBetween.join(', ');
+        const by = expense.addedBy ? ` · Added by ${escapeHtml(expense.addedBy)}` : '';
+        return `<div class="expense-row">
+          <div><div class="expense-name">${escapeHtml(expense.description)}</div><div class="expense-meta">${escapeHtml(expense.date)}${by}</div></div>
+          <div class="expense-amount">${currency.format(expense.amount)}</div>
+          <div class="expense-share">Paid by <b>${escapeHtml(expense.payer)}</b><br>Split: ${escapeHtml(split)}</div>
+          <button class="btn btn-danger btn-small" data-delete-id="${escapeAttribute(expense.id)}">Remove</button>
+        </div>`;
+      }).join('');
+      document.querySelectorAll('[data-delete-id]').forEach(button => {
+        button.addEventListener('click', () => deleteExpense(button.dataset.deleteId));
+      });
+    }
+
+    async function savePeople() {
       clearMessage('groupMessage');
-      clearMessage('expenseMessage');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
+      const people = $('peopleInput').value.split(',').map(value => value.trim()).filter(Boolean);
+      const unique = new Set(people.map(person => person.toLowerCase()));
+      if (people.length < 2) return showMessage('groupMessage', 'Add at least two names.', 'error');
+      if (unique.size !== people.length) return showMessage('groupMessage', 'Each name must be unique.', 'error');
+      if (!configured()) return showMessage('groupMessage', 'Add the Apps Script URL and trip key in the page configuration first.', 'error');
 
-    function restoreTrip() {
+      $('savePeopleBtn').disabled = true;
+      setSync('busy', 'Saving the shared group...');
       try {
-        const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
-        if (!saved || !Array.isArray(saved.people) || saved.people.length < 2) return;
-        people = saved.people;
-        $('peopleInput').value = people.join(', ');
-        $('expensesCard').style.display = 'block';
-        (Array.isArray(saved.expenses) && saved.expenses.length ? saved.expenses : [{}]).forEach(addExpense);
-        const savedAt = saved.savedAt ? new Date(saved.savedAt) : null;
-        const when = savedAt && !Number.isNaN(savedAt) ? savedAt.toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }) : 'earlier';
-        updateSaveStatus(`Saved trip restored · ${when}`);
+        await sendPost({ action:'setPeople', people });
+        await sleep(1500);
+        const success = await loadTrip(true);
+        if (!success || JSON.stringify(state.people) !== JSON.stringify(people)) throw new Error('The shared group was not confirmed. Check the Apps Script setup.');
+        showMessage('groupMessage', 'Shared group saved. Everyone using this page will now see it.', 'success');
       } catch (error) {
-        localStorage.removeItem(STORAGE_KEY);
+        setSync('bad', error.message || 'Unable to save group.');
+        showMessage('groupMessage', error.message || 'Unable to save shared group.', 'error');
+      } finally {
+        $('savePeopleBtn').disabled = false;
       }
     }
 
-    $('setPeopleBtn').addEventListener('click', setPeople);
-    $('addExpenseBtn').addEventListener('click', () => { addExpense(); saveTrip(); });
-    $('calculateBtn').addEventListener('click', calculateSettlement);
-    $('exportBtn').addEventListener('click', exportBackup);
-    $('resetBtn').addEventListener('click', resetTrip);
-    restoreTrip();
+    async function saveExpense(event) {
+      event.preventDefault();
+      clearMessage('expenseMessage');
+      if (!configured()) return showMessage('expenseMessage', 'Add the Apps Script URL and trip key in the page configuration first.', 'error');
+      const splitBetween = [...document.querySelectorAll('#splitPeople input:checked')].map(input => input.value);
+      const expense = {
+        id: window.crypto?.randomUUID ? crypto.randomUUID() : `exp-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+        date: $('expenseDate').value,
+        description: $('expenseDescription').value.trim(),
+        amount: Number($('expenseAmount').value),
+        payer: $('expensePayer').value,
+        splitBetween,
+        addedBy: $('addedBy').value.trim()
+      };
+      if (!expense.date || !expense.description || !Number.isFinite(expense.amount) || expense.amount <= 0 || !expense.payer || !splitBetween.length) {
+        return showMessage('expenseMessage', 'Complete the date, description, amount, payer, and split before saving.', 'error');
+      }
+
+      $('saveExpenseBtn').disabled = true;
+      setSync('busy', 'Saving expense to the shared sheet...');
+      try {
+        await sendPost({ action:'addExpense', expense });
+        let saved = false;
+        for (let attempt = 0; attempt < 8; attempt++) {
+          await sleep(1400);
+          await loadTrip(true);
+          if (state.expenses.some(item => item.id === expense.id)) { saved = true; break; }
+        }
+        if (!saved) throw new Error('The expense could not be confirmed. Refresh and check the shared sheet before adding it again.');
+        $('expenseForm').reset();
+        $('expenseDate').value = localDateValue();
+        renderExpenseForm();
+        showMessage('expenseMessage', 'Expense saved to the shared trip.', 'success');
+      } catch (error) {
+        setSync('bad', error.message || 'Unable to save expense.');
+        showMessage('expenseMessage', error.message || 'Unable to save shared expense.', 'error');
+      } finally {
+        $('saveExpenseBtn').disabled = state.people.length < 2;
+      }
+    }
+
+    async function deleteExpense(id) {
+      const expense = state.expenses.find(item => item.id === id);
+      if (!expense || !confirm(`Remove “${expense.description}” for everyone?`)) return;
+      clearMessage('expenseMessage');
+      setSync('busy', 'Removing shared expense...');
+      try {
+        await sendPost({ action:'deleteExpense', id });
+        let removed = false;
+        for (let attempt = 0; attempt < 8; attempt++) {
+          await sleep(1200);
+          await loadTrip(true);
+          if (!state.expenses.some(item => item.id === id)) { removed = true; break; }
+        }
+        if (!removed) throw new Error('The removal could not be confirmed. Refresh and check the sheet.');
+        showMessage('expenseMessage', 'Expense removed for the group.', 'success');
+      } catch (error) {
+        setSync('bad', error.message || 'Unable to remove expense.');
+        showMessage('expenseMessage', error.message || 'Unable to remove shared expense.', 'error');
+      }
+    }
+
+    function init() {
+      $('expenseDate').value = localDateValue();
+      $('savePeopleBtn').addEventListener('click', savePeople);
+      $('expenseForm').addEventListener('submit', saveExpense);
+      $('refreshBtn').addEventListener('click', () => loadTrip());
+
+      if (!configured()) {
+        $('configNotice').innerHTML = 'Before using this page, open <code>index.html</code> and replace <code>PASTE_YOUR_APPS_SCRIPT_WEB_APP_URL_HERE</code> and <code>PASTE_THE_SAME_TRIP_KEY_HERE</code> with your deployed Apps Script values.';
+        $('configNotice').classList.add('show');
+        setSync('', 'Set the Google Apps Script URL first.');
+        render();
+        return;
+      }
+      loadTrip();
+    }
+
+    init();
   </script>
 </body>
 </html>
