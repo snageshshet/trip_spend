@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Trip Spend Splitter</title>
+  <style>
+    :root {
+      --bg: #f6f7fb;
+      --card: #ffffff;
+      --text: #18212f;
+      --muted: #697386;
+      --line: #e4e7ec;
+      --primary: #1f6feb;
+      --primary-dark: #1557b0;
+      --green: #138a4a;
+      --red: #c53a3a;
+      --shadow: 0 8px 24px rgba(16, 24, 40, 0.08);
+    }
+
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: Arial, Helvetica, sans-serif; background: var(--bg); color: var(--text); }
+    .container { max-width: 1050px; margin: 0 auto; padding: 32px 16px 48px; }
+    h1 { margin: 0 0 6px; font-size: 28px; }
+    .subtitle { color: var(--muted); margin: 0 0 8px; }
+    .save-status { color: var(--green); font-size: 13px; min-height: 18px; margin: 0 0 24px; }
+
+    .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 20px; margin-bottom: 18px; box-shadow: var(--shadow); }
+    h2 { margin: 0 0 14px; font-size: 19px; }
+    .row { display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: end; }
+    label { display: block; font-size: 13px; font-weight: 700; margin-bottom: 6px; }
+    input, select, button { font: inherit; border-radius: 8px; }
+    input, select { width: 100%; padding: 10px 11px; border: 1px solid #cfd4dc; background: #fff; color: var(--text); }
+    button { border: 0; cursor: pointer; padding: 10px 14px; font-weight: 700; background: var(--primary); color: #fff; }
+    button:hover { background: var(--primary-dark); }
+    button.secondary { background: #eef3fb; color: #184a93; }
+    button.secondary:hover { background: #dfeaf9; }
+    button.danger { background: #fff0f0; color: var(--red); }
+    button.danger:hover { background: #ffe0e0; }
+    button.small { padding: 7px 10px; font-size: 13px; }
+    .hint { font-size: 12px; color: var(--muted); margin: 8px 0 0; }
+
+    .expense { border: 1px solid var(--line); border-radius: 10px; padding: 14px; margin-bottom: 12px; background: #fcfcfd; }
+    .expense-grid { display: grid; grid-template-columns: minmax(160px, 1.4fr) 120px minmax(140px, 1fr) auto; gap: 10px; align-items: end; }
+    .split-people { margin-top: 12px; display: flex; gap: 10px; flex-wrap: wrap; }
+    .person-check { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line); border-radius: 20px; padding: 6px 9px; font-size: 13px; background: #fff; }
+    .person-check input { width: auto; margin: 0; }
+    .actions { display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
+
+    .message { display: none; padding: 11px 12px; border-radius: 8px; margin-top: 12px; font-size: 14px; }
+    .message.error { display: block; background: #fff1f1; color: #9d1c1c; }
+    .message.success { display: block; background: #edf9f0; color: #0c6a35; }
+
+    .results { display: none; }
+    .summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 18px; }
+    .metric { border: 1px solid var(--line); border-radius: 10px; padding: 13px; background: #fafbfc; }
+    .metric span { color: var(--muted); font-size: 12px; display: block; }
+    .metric strong { font-size: 22px; margin-top: 5px; display: block; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th, td { text-align: left; padding: 11px 8px; border-bottom: 1px solid var(--line); }
+    th { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.03em; }
+    td:last-child, th:last-child { text-align: right; }
+    .positive { color: var(--green); font-weight: 700; }
+    .negative { color: var(--red); font-weight: 700; }
+    .zero { color: var(--muted); font-weight: 700; }
+    .settlement-list { display: grid; gap: 10px; }
+    .settlement { display: flex; justify-content: space-between; gap: 12px; align-items: center; padding: 12px; border: 1px solid #dfe8ff; border-radius: 9px; background: #f7faff; }
+    .settlement strong { color: #174d99; }
+
+    @media (max-width: 720px) {
+      .expense-grid { grid-template-columns: 1fr 1fr; }
+      .expense-grid .remove-wrap { grid-column: span 2; }
+      .summary { grid-template-columns: 1fr; }
+      .row { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <main class="container">
+    <h1>Trip Spend Splitter</h1>
+    <p class="subtitle">Add expenses during the trip. They are saved automatically on this browser, so calculate the settlement at the end.</p>
+    <p class="save-status" id="saveStatus"></p>
+
+    <section class="card">
+      <h2>1. Add people</h2>
+      <div class="row">
+        <div>
+          <label for="peopleInput">Names (separate with commas)</label>
+          <input id="peopleInput" placeholder="Example: Nagesh, Ravi, Priya, Anil" />
+        </div>
+        <button id="setPeopleBtn">Set people</button>
+      </div>
+      <p class="hint">Changing the group starts a new trip and clears the saved expenses.</p>
+      <div id="groupMessage" class="message"></div>
+    </section>
+
+    <section class="card" id="expensesCard" style="display:none;">
+      <h2>2. Add expenses</h2>
+      <div id="expenses"></div>
+      <div class="actions">
+        <button class="secondary" id="addExpenseBtn">+ Add expense</button>
+        <button id="calculateBtn">Calculate settlement</button>
+        <button class="secondary" id="exportBtn">Export backup</button>
+        <button class="danger" id="resetBtn">Reset trip</button>
+      </div>
+      <p class="hint">Use Export backup before clearing browser data or moving to another device.</p>
+      <div id="expenseMessage" class="message"></div>
+    </section>
+
+    <section class="card results" id="results">
+      <h2>3. Settlement result</h2>
+      <div class="summary">
+        <div class="metric"><span>Total trip spend</span><strong id="totalSpend">₹0.00</strong></div>
+        <div class="metric"><span>Number of people</span><strong id="peopleCount">0</strong></div>
+        <div class="metric"><span>Number of expenses</span><strong id="expenseCount">0</strong></div>
+      </div>
+
+      <h2>Individual balance</h2>
+      <table>
+        <thead><tr><th>Person</th><th>Paid</th><th>Share owed</th><th>Net balance</th></tr></thead>
+        <tbody id="balanceRows"></tbody>
+      </table>
+
+      <h2 style="margin-top:22px;">Who should pay whom</h2>
+      <div id="settlements" class="settlement-list"></div>
+    </section>
+  </main>
+
+  <script>
+    const STORAGE_KEY = 'trip-spend-splitter-v2';
+    let people = [];
+
+    const currency = new Intl.NumberFormat('en-IN', {
+      style: 'currency', currency: 'INR', minimumFractionDigits: 2
+    });
+    const $ = (id) => document.getElementById(id);
+
+    function showMessage(id, text, type = 'error') {
+      const el = $(id);
+      el.textContent = text;
+      el.className = `message ${type}`;
+    }
+
+    function clearMessage(id) {
+      const el = $(id);
+      el.textContent = '';
+      el.className = 'message';
+    }
+
+    function escapeHtml(value) {
+      return String(value).replace(/[&<>'"]/g, c => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
+      }[c]));
+    }
+
+    function currentExpenseData() {
+      return [...document.querySelectorAll('.expense')].map(card => ({
+        description: card.querySelector('.expense-desc').value,
+        amount: card.querySelector('.expense-amount').value,
+        payer: card.querySelector('.expense-payer').value,
+        sharedWith: [...card.querySelectorAll('input[type="checkbox"]:checked')].map(x => x.value)
+      }));
+    }
+
+    function saveTrip() {
+      if (!people.length) return;
+      const trip = { people, expenses: currentExpenseData(), savedAt: new Date().toISOString() };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(trip));
+      const when = new Date(trip.savedAt).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' });
+      $('saveStatus').textContent = `Saved automatically on this browser · ${when}`;
+    }
+
+    function setPeople() {
+      const raw = $('peopleInput').value.trim();
+      const names = raw.split(',').map(x => x.trim()).filter(Boolean);
+      const uniqueNames = [...new Set(names.map(x => x.toLowerCase()))];
+
+      if (names.length < 2) {
+        showMessage('groupMessage', 'Add at least two names.');
+        return;
+      }
+      if (uniqueNames.length !== names.length) {
+        showMessage('groupMessage', 'Each person must have a unique name.');
+        return;
+      }
+
+      people = names;
+      $('expenses').innerHTML = '';
+      $('expensesCard').style.display = 'block';
+      $('results').style.display = 'none';
+      clearMessage('groupMessage');
+      clearMessage('expenseMessage');
+      addExpense();
+      saveTrip();
+    }
+
+    function addExpense(data = {}) {
+      if (!people.length) return;
+      const id = `expense-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+      const payer = people.includes(data.payer) ? data.payer : people[0];
+      const sharedWith = Array.isArray(data.sharedWith) && data.sharedWith.length ? data.sharedWith : people;
+      const payerOptions = people.map(name => `<option value="${escapeHtml(name)}" ${name === payer ? 'selected' : ''}>${escapeHtml(name)}</option>`).join('');
+      const checkboxes = people.map(name => `
+        <label class="person-check">
+          <input type="checkbox" value="${escapeHtml(name)}" ${sharedWith.includes(name) ? 'checked' : ''}>
+          ${escapeHtml(name)}
+        </label>`).join('');
+
+      const div = document.createElement('div');
+      div.className = 'expense';
+      div.id = id;
+      div.innerHTML = `
+        <div class="expense-grid">
+          <div>
+            <label>Description</label>
+            <input class="expense-desc" placeholder="Hotel, dinner, taxi..." value="${escapeHtml(data.description || '')}" />
+          </div>
+          <div>
+            <label>Amount (₹)</label>
+            <input class="expense-amount" type="number" min="0" step="0.01" placeholder="0.00" value="${escapeHtml(data.amount || '')}" />
+          </div>
+          <div>
+            <label>Paid by</label>
+            <select class="expense-payer">${payerOptions}</select>
+          </div>
+          <div class="remove-wrap">
+            <button class="danger small remove-expense" type="button">Remove</button>
+          </div>
+        </div>
+        <div>
+          <label style="margin-top:12px;">Split between</label>
+          <div class="split-people">${checkboxes}</div>
+        </div>`;
+
+      div.querySelector('.remove-expense').addEventListener('click', () => {
+        div.remove();
+        $('results').style.display = 'none';
+        saveTrip();
+      });
+      div.querySelectorAll('input, select').forEach(field => {
+        field.addEventListener('input', () => { $('results').style.display = 'none'; saveTrip(); });
+        field.addEventListener('change', () => { $('results').style.display = 'none'; saveTrip(); });
+      });
+      $('expenses').appendChild(div);
+    }
+
+    function getExpenses() {
+      const cards = [...document.querySelectorAll('.expense')];
+      const parsed = [];
+      for (let index = 0; index < cards.length; index++) {
+        const card = cards[index];
+        const amount = Number(card.querySelector('.expense-amount').value);
+        const payer = card.querySelector('.expense-payer').value;
+        const description = card.querySelector('.expense-desc').value.trim() || `Expense ${index + 1}`;
+        const sharedWith = [...card.querySelectorAll('input[type="checkbox"]:checked')].map(x => x.value);
+        if (!Number.isFinite(amount) || amount <= 0) throw new Error(`Enter a valid amount for ${description}.`);
+        if (!sharedWith.length) throw new Error(`Select at least one person for ${description}.`);
+        parsed.push({ description, amount, payer, sharedWith });
+      }
+      if (!parsed.length) throw new Error('Add at least one expense.');
+      return parsed;
+    }
+
+    function calculateSettlement() {
+      clearMessage('expenseMessage');
+      saveTrip();
+      let expenses;
+      try { expenses = getExpenses(); }
+      catch (error) { showMessage('expenseMessage', error.message); return; }
+
+      const paid = Object.fromEntries(people.map(p => [p, 0]));
+      const owed = Object.fromEntries(people.map(p => [p, 0]));
+      let total = 0;
+      expenses.forEach(expense => {
+        total += expense.amount;
+        paid[expense.payer] += expense.amount;
+        const split = expense.amount / expense.sharedWith.length;
+        expense.sharedWith.forEach(person => { owed[person] += split; });
+      });
+      const balances = people.map(person => ({ person, paid: paid[person], owed: owed[person], net: paid[person] - owed[person] }));
+      renderResults(total, expenses.length, balances);
+    }
+
+    function renderResults(total, expenseCount, balances) {
+      $('totalSpend').textContent = currency.format(total);
+      $('peopleCount').textContent = people.length;
+      $('expenseCount').textContent = expenseCount;
+      $('balanceRows').innerHTML = balances.map(item => {
+        const className = item.net > 0.005 ? 'positive' : item.net < -0.005 ? 'negative' : 'zero';
+        const sign = item.net > 0.005 ? '+' : '';
+        return `<tr><td>${escapeHtml(item.person)}</td><td>${currency.format(item.paid)}</td><td>${currency.format(item.owed)}</td><td class="${className}">${sign}${currency.format(item.net)}</td></tr>`;
+      }).join('');
+
+      const settlements = createSettlements(balances);
+      $('settlements').innerHTML = settlements.length
+        ? settlements.map(s => `<div class="settlement"><span><strong>${escapeHtml(s.from)}</strong> pays <strong>${escapeHtml(s.to)}</strong></span><strong>${currency.format(s.amount)}</strong></div>`).join('')
+        : '<div class="settlement"><span>Everyone is settled. No payments are needed.</span></div>';
+      $('results').style.display = 'block';
+      $('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function createSettlements(balances) {
+      const creditors = balances.filter(x => x.net > 0.005).map(x => ({ name: x.person, amount: x.net })).sort((a, b) => b.amount - a.amount);
+      const debtors = balances.filter(x => x.net < -0.005).map(x => ({ name: x.person, amount: -x.net })).sort((a, b) => b.amount - a.amount);
+      const output = [];
+      let i = 0, j = 0;
+      while (i < debtors.length && j < creditors.length) {
+        const amount = Math.min(debtors[i].amount, creditors[j].amount);
+        if (amount > 0.005) output.push({ from: debtors[i].name, to: creditors[j].name, amount });
+        debtors[i].amount -= amount;
+        creditors[j].amount -= amount;
+        if (debtors[i].amount <= 0.005) i++;
+        if (creditors[j].amount <= 0.005) j++;
+      }
+      return output;
+    }
+
+    function exportBackup() {
+      if (!people.length) return;
+      saveTrip();
+      const backup = localStorage.getItem(STORAGE_KEY);
+      const blob = new Blob([backup], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `trip-spend-backup-${new Date().toISOString().slice(0, 10)}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showMessage('expenseMessage', 'Backup exported successfully.', 'success');
+    }
+
+    function resetTrip() {
+      if (!confirm('Reset this trip? All saved expenses on this browser will be removed.')) return;
+      people = [];
+      localStorage.removeItem(STORAGE_KEY);
+      $('peopleInput').value = '';
+      $('expenses').innerHTML = '';
+      $('expensesCard').style.display = 'none';
+      $('results').style.display = 'none';
+      $('saveStatus').textContent = '';
+      clearMessage('groupMessage');
+      clearMessage('expenseMessage');
+    }
+
+    function restoreTrip() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
+        if (!saved || !Array.isArray(saved.people) || saved.people.length < 2) return;
+        people = saved.people;
+        $('peopleInput').value = people.join(', ');
+        $('expensesCard').style.display = 'block';
+        (Array.isArray(saved.expenses) && saved.expenses.length ? saved.expenses : [{}]).forEach(addExpense);
+        const savedAt = saved.savedAt ? new Date(saved.savedAt) : null;
+        const when = savedAt && !Number.isNaN(savedAt) ? savedAt.toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }) : 'earlier';
+        $('saveStatus').textContent = `Saved trip restored · last saved ${when}`;
+      } catch (error) {
+        localStorage.removeItem(STORAGE_KEY);
+      }
+    }
+
+    $('setPeopleBtn').addEventListener('click', setPeople);
+    $('addExpenseBtn').addEventListener('click', () => { addExpense(); saveTrip(); });
+    $('calculateBtn').addEventListener('click', calculateSettlement);
+    $('exportBtn').addEventListener('click', exportBackup);
+    $('resetBtn').addEventListener('click', resetTrip);
+    restoreTrip();
+  </script>
+</body>
+</html>
